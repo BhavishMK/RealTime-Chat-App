@@ -1,0 +1,20 @@
+.vs/
+[Bb]in/
+[Oo]bj/
+node_modules/
+.DS_Store
+*.user
+# Build folders
+bin/
+obj/
+dist/
+node_modules/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Docker
+.dockerignore_old

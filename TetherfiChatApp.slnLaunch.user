@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Tetherfi.Identity.Service\\Tetherfi.Identity.Service.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Tetherfi.Chat.Service\\Tetherfi.Chat.Service.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

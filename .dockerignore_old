@@ -1,0 +1,24 @@
+# Exclude OS files
+.DS_Store
+Thumbs.db
+
+# Exclude build artifacts
+**/bin
+**/obj
+**/publish
+**/dist
+
+# Exclude dependencies (Very Important!)
+**/node_modules
+**/npm-debug.log
+
+# Exclude IDE settings
+**/.vs
+**/.vscode
+**/.git
+**/.gitignore
+
+# Exclude Docker files themselves
+.dockerignore
+docker-compose*
+**/Dockerfile*

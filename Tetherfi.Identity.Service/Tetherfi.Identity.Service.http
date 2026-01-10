@@ -1,0 +1,6 @@
+@Tetherfi.Identity.Service_HostAddress = http://localhost:5111
+
+GET {{Tetherfi.Identity.Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

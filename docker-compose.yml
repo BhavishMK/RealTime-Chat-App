@@ -1,0 +1,57 @@
+
+
+services:
+  # 1. The Database
+  db:
+    image: mysql:8.0
+    container_name: tetherfi-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: TetherfiChatDB
+    ports:
+      - "3306:3306"
+
+  # 2. Identity Microservice
+  identity-api:
+    build:
+      context: ./Tetherfi.Identity.Service
+      dockerfile: Dockerfile
+    container_name: identity-service
+    ports:
+      - "7277:8080" # Maps localhost:7277 to container:8080
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=db;Database=TetherfiChatDB;Uid=root;Pwd=root_password;
+      - Jwt__Key=YourSuperSecretKey1234567890123456
+      - Jwt__Issuer=TetherfiIdentity
+      - Jwt__Audience=TetherfiChat
+
+  # 3. Chat Microservice
+  chat-api:
+    build:
+      context: ./Tetherfi.Chat.Service
+      dockerfile: Dockerfile
+    container_name: chat-service
+    ports:
+      - "7151:8080"
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=db;Database=TetherfiChatDB;Uid=root;Pwd=root_password;
+      - Jwt__Key=YourSuperSecretKey1234567890123456
+      - Jwt__Issuer=TetherfiIdentity
+      - Jwt__Audience=TetherfiChat
+
+  # 4. React Frontend
+  frontend:
+    build:
+      context: ./tetherfi-chat-ui
+      dockerfile: Dockerfile
+    container_name: chat-ui
+    ports:
+      - "5173:80" # Maps localhost:5173 to Nginx port 80
+    depends_on:
+      - identity-api
+      - chat-api

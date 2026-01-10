@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36119.2
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tetherfi.Identity.Service", "Tetherfi.Identity.Service\Tetherfi.Identity.Service.csproj", "{A868E8C7-E91B-43B7-9BCB-34A27E5F8EDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tetherfi.Chat.Service", "Tetherfi.Chat.Service\Tetherfi.Chat.Service.csproj", "{65CBCCD1-C5F8-4F26-AA4A-BB7878D47888}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A868E8C7-E91B-43B7-9BCB-34A27E5F8EDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A868E8C7-E91B-43B7-9BCB-34A27E5F8EDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A868E8C7-E91B-43B7-9BCB-34A27E5F8EDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A868E8C7-E91B-43B7-9BCB-34A27E5F8EDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65CBCCD1-C5F8-4F26-AA4A-BB7878D47888}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65CBCCD1-C5F8-4F26-AA4A-BB7878D47888}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65CBCCD1-C5F8-4F26-AA4A-BB7878D47888}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65CBCCD1-C5F8-4F26-AA4A-BB7878D47888}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B192A15F-06E6-40C1-8107-34AB632F3EB1}
+	EndGlobalSection
+EndGlobal
