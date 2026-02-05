@@ -1,7 +1,4 @@
-
-
 services:
-  # 1. The Database
   db:
     image: mysql:8.0
     container_name: tetherfi-mysql
@@ -11,47 +8,41 @@ services:
       MYSQL_DATABASE: TetherfiChatDB
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
 
-  # 2. Identity Microservice
   identity-api:
-    build:
-      context: ./Tetherfi.Identity.Service
-      dockerfile: Dockerfile
+    build: ./Tetherfi.Identity.Service
     container_name: identity-service
     ports:
-      - "7277:8080" # Maps localhost:7277 to container:8080
+      - "7277:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy # Wait for MySQL to be fully "green"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=db;Database=TetherfiChatDB;Uid=root;Pwd=root_password;
-      - Jwt__Key=YourSuperSecretKey1234567890123456
-      - Jwt__Issuer=TetherfiIdentity
-      - Jwt__Audience=TetherfiChat
+      - ConnectionStrings__DefaultConnection=Server=db;Database=IdentityDB;Uid=root;Pwd=root_password;
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Development
 
-  # 3. Chat Microservice
   chat-api:
-    build:
-      context: ./Tetherfi.Chat.Service
-      dockerfile: Dockerfile
+    build: ./Tetherfi.Chat.Service
     container_name: chat-service
     ports:
       - "7151:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      - ConnectionStrings__DefaultConnection=Server=db;Database=TetherfiChatDB;Uid=root;Pwd=root_password;
-      - Jwt__Key=YourSuperSecretKey1234567890123456
-      - Jwt__Issuer=TetherfiIdentity
-      - Jwt__Audience=TetherfiChat
+      - ConnectionStrings__DefaultConnection=Server=db;Database=ChatDB;Uid=root;Pwd=root_password;
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Development
 
-  # 4. React Frontend
   frontend:
-    build:
-      context: ./tetherfi-chat-ui
-      dockerfile: Dockerfile
+    build: ./tetherfi-chat-ui
     container_name: chat-ui
     ports:
-      - "5173:80" # Maps localhost:5173 to Nginx port 80
+      - "5173:80"
     depends_on:
       - identity-api
-      - chat-api

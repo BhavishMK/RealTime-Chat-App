@@ -12,37 +12,60 @@ namespace Tetherfi.Chat.Service.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly ChatDbContext _context;
+        private readonly ILogger<MessagesController> _logger;
 
-        public MessagesController(ChatDbContext context)
+        public MessagesController(ChatDbContext context, ILogger<MessagesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet("history/{receiverId}")]
         public async Task<IActionResult> GetChatHistory(int receiverId)
         {
-            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            try
+            {
+                // 1. Safe Claim Extraction
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                 ?? User.FindFirst("sub")?.Value;
 
-            var messages = await _context.Messages
-                .Where(m => (m.SenderId == currentUserId && m.ReceiverId == receiverId) ||
-                            (m.SenderId == receiverId && m.ReceiverId == currentUserId))
-                .OrderBy(m => m.Timestamp)
-                .Select(m => new {
-                    m.Id,
-                    m.SenderId,
-                    m.ReceiverId,
-                    m.Content,
-                    m.Timestamp,
-                    m.ReplyToMessageId,
-                    
-                    ReplyToContent = _context.Messages
-                        .Where(x => x.Id == m.ReplyToMessageId)
-                        .Select(x => x.Content)
-                        .FirstOrDefault()
-                })
-                .ToListAsync();
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    _logger.LogWarning("User ID claim not found in token.");
+                    return Unauthorized("User ID not found in token.");
+                }
 
-            return Ok(messages);
+                int currentUserId = int.Parse(userIdClaim);
+                _logger.LogInformation($"Fetching history for User {currentUserId} and Colleague {receiverId}");
+
+                // 2. Optimized Query
+                var messages = await _context.Messages
+                    .Where(m => (m.SenderId == currentUserId && m.ReceiverId == receiverId) ||
+                                (m.SenderId == receiverId && m.ReceiverId == currentUserId))
+                    .OrderBy(m => m.Timestamp)
+                    .Select(m => new {
+                        id = m.Id,
+                        senderId = m.SenderId,
+                        receiverId = m.ReceiverId,
+                        content = m.Content,
+                        timestamp = m.Timestamp,
+                        replyToId = m.ReplyToMessageId,
+                        // Get the content of the message being replied to
+                        replyToContent = _context.Messages
+                            .Where(x => x.Id == m.ReplyToMessageId)
+                            .Select(x => x.Content)
+                            .FirstOrDefault()
+                    })
+                    .ToListAsync();
+
+                return Ok(messages);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching chat history");
+                // Returning the error message helps you debug in the Network Tab
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

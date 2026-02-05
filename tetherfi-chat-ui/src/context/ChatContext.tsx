@@ -1,22 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
 import * as signalR from "@microsoft/signalr";
 
 interface Message {
     id: number;
     senderId: number;
-     receiverId: number;
+    receiverId: number;
     content: string;
     replyToId?: number;
     timestamp: string;
 }
 
 interface ChatContextType {
+    // FIX: Added 'connection' to the interface
     connection: signalR.HubConnection | null;
     messages: Message[];
     onlineUsers: any[];
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-    setOnlineUsers: React.Dispatch<React.SetStateAction<any[]>>; 
+    setOnlineUsers: React.Dispatch<React.SetStateAction<any[]>>;
+    sendMessage: (receiverId: number, content: string, replyToId: number | null) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -27,69 +28,78 @@ export const ChatProvider = ({ children, token }: { children: React.ReactNode, t
     const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
 
     useEffect(() => {
-        // 1. If no token, or if we already have a starting/connected instance, don't re-run
-        if (!token || (connection && connection.state !== signalR.HubConnectionState.Disconnected)) {
-            return;
-        }
+        if (!token) return;
 
+        // Force WebSockets and Skip Negotiation to bypass Docker SSL/Port issues
         const newConnection = new signalR.HubConnectionBuilder()
-            .withUrl("https://localhost:7151/chathub", {
-                accessTokenFactory: () => token // Use the token from props
+            .withUrl("http://localhost:7151/chathub", { 
+                accessTokenFactory: () => token,
+                skipNegotiation: true,
+                transport: signalR.HttpTransportType.WebSockets
             })
             .withAutomaticReconnect()
-            .configureLogging(signalR.LogLevel.Information)
             .build();
 
-        // 2. Add a lock variable to prevent double-starting in Strict Mode
-        let isMounted = true;
+        newConnection.on("ReceiveMessage", (message) => {
+            setMessages((prev) => {
+                if (prev.some(m => m.id === message.id)) return prev;
+                return [...prev, message];
+            });
+        });
 
-        const startConnection = async () => {
+        newConnection.on("UserStatusChanged", (userId, status) => {
+            setOnlineUsers(prev => prev.map(u => 
+                u.id.toString() === userId.toString() ? { ...u, status } : u
+            ));
+        });
+
+        const start = async () => {
             try {
-                // Only start if the component is still mounted
-                if (newConnection.state === signalR.HubConnectionState.Disconnected) {
-                    await newConnection.start();
-                    
-                    if (isMounted) {
-                        console.log("WebSocket Connected successfully!");
-                        
-                        // Set up listeners ONLY once
-                        newConnection.on("ReceiveMessage", (message) => {
-                            setMessages((prev) => [...prev, message]);
-                        });
-
-                        newConnection.on("UserStatusChanged", (userId, status) => {
-                            setOnlineUsers(prev => prev.map(u => 
-                                u.id.toString() === userId.toString() ? { ...u, status } : u
-                            ));
-                        });
-
-                        setConnection(newConnection);
-                    }
-                }
-            } catch (err: any) {
-                // Ignore the AbortError as it's a known side effect of React Strict Mode cleanup
-                if (err.name !== 'AbortError') {
-                    console.error("SignalR Connection Error: ", err);
-                }
+                await newConnection.start();
+                console.log("🚀 SIGNALR CONNECTED");
+                setConnection(newConnection);
+            } catch (err) {
+                console.error("SignalR Start Error: ", err);
+                setTimeout(start, 5000);
             }
         };
 
-        startConnection();
+        start();
 
-        // 3. Cleanup function
         return () => {
-            isMounted = false;
-            if (newConnection.state === signalR.HubConnectionState.Connected) {
-                newConnection.stop();
-            }
+            newConnection.stop();
         };
-    }, [token]); // Only re-run if token changes
+    }, [token]);
+
+    // Added a robust sendMessage helper
+    const sendMessage = async (receiverId: number, content: string, replyToId: number | null) => {
+        if (connection && connection.state === signalR.HubConnectionState.Connected) {
+            try {
+                await connection.invoke("SendPrivateMessage", receiverId, content, replyToId);
+            } catch (err) {
+                console.error("Invoke Error:", err);
+            }
+        } else {
+            alert("Chat server is not connected yet. Please wait.");
+        }
+    };
 
     return (
-        <ChatContext.Provider value={{ connection, messages, onlineUsers, setMessages, setOnlineUsers }}>
+        <ChatContext.Provider value={{ 
+            connection, // Now passed correctly
+            messages, 
+            onlineUsers, 
+            setMessages, 
+            setOnlineUsers,
+            sendMessage 
+        }}>
             {children}
         </ChatContext.Provider>
     );
 };
 
-export const useChat = () => useContext(ChatContext)!;
+export const useChat = () => {
+    const context = useContext(ChatContext);
+    if (!context) throw new Error("useChat must be used within ChatProvider");
+    return context;
+};

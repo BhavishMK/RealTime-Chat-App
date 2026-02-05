@@ -1,5 +1,6 @@
 # 1. Start with the .NET SDK (the "Kitchen" where we cook the code)
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 WORKDIR /app
 
 # 2. Copy the project file and "Restore" (downloading Nuget packages)

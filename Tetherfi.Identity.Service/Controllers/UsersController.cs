@@ -37,5 +37,19 @@ namespace Tetherfi.Identity.Service.Controllers
 
             return Ok(users);
         }
+        [HttpPatch("status")]
+        [Authorize]
+        public async Task<IActionResult> UpdateStatus([FromBody] StatusUpdateDto model)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            user.Status = model.Status;
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        public class StatusUpdateDto { public string Status { get; set; } }
     }
 }

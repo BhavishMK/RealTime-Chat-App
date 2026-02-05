@@ -1,4 +1,14 @@
 .vs/
+**/[Oo]bj/
+**/[Bb]in/
+node_modules/
+*.user
+.DS_Store
+
+
+
+
+.vs/
 [Bb]in/
 [Oo]bj/
 node_modules/

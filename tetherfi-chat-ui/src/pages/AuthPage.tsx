@@ -3,7 +3,6 @@ import { identityApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, LogIn, UserPlus, AlertCircle } from 'lucide-react';
 
-
 const AuthPage: React.FC = () => {
     const navigate = useNavigate();
     
@@ -21,7 +20,7 @@ const AuthPage: React.FC = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        if (error) setError(null); // Clear error when user types
+        if (error) setError(null); 
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -29,38 +28,63 @@ const AuthPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        if (!isLogin && formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match");
-            setLoading(false);
-            return;
-        }
+       try {
+            if (isLogin) {
+                const response = await identityApi.post('/auth/login', {
+                    username: formData.username,
+                    password: formData.password
+                });
+                
+                const data = response.data;
+                const token = data.token || data.Token;
+                const user = data.user || data.User;
+                
+                if (token && user) {
+                    localStorage.clear(); // Clear any old junk
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(user));
+                    
+                    console.log("Login successful, redirecting...");
+                    
+                    // Option A: Standard Navigate
+                    // navigate('/chat'); 
+                    
+                    // Option B: FORCE REDIRECT (Use this if Option A fails)
+                    window.location.href = '/chat'; 
+                } else {
+                    setError("Server returned success but data is missing. Check Network tab.");
+                }
+            } 
+            // ... register logic ...
+                // --- REGISTER LOGIC ---
+                if (formData.password !== formData.confirmPassword) {
+                    setError("Passwords do not match");
+                    setLoading(false);
+                    return;
+                }
 
-        try {
-            const endpoint = isLogin ? '/auth/login' : '/auth/register';
-            
-            // 2. Change 'api.post' to 'identityApi.post'
-            const response = await identityApi.post(endpoint, {
-                username: formData.username,
-                password: formData.password
-            });
+                await identityApi.post('/auth/register', {
+                    username: formData.username,
+                    password: formData.password
+                });
 
-            const { token, user } = response.data;
-            
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-
-            navigate('/chat');
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Authentication failed. Please try again.");
+                alert("Registration successful! Please login.");
+                setIsLogin(true); // Switch to login view
+                setFormData({ username: formData.username, password: '', confirmPassword: '' }); 
+            }
+        catch (err: any) {
+            console.error("Auth Error Object:", err);
+            const serverMessage = err.response?.data?.message || err.response?.data?.Message;
+            setError(serverMessage || "Connection failed. Ensure Backend is running.");
         } finally {
             setLoading(false);
         }
     };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
             <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
                 
-                {/* Header Section */}
                 <div className="bg-blue-600 p-8 text-white text-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
                         <Lock size={32} />
@@ -71,7 +95,6 @@ const AuthPage: React.FC = () => {
                     </p>
                 </div>
 
-                {/* Form Section */}
                 <div className="p-8">
                     {error && (
                         <div className="mb-6 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 flex items-center text-sm">
@@ -81,7 +104,6 @@ const AuthPage: React.FC = () => {
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Username */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
                             <div className="relative">
@@ -92,15 +114,14 @@ const AuthPage: React.FC = () => {
                                     type="text"
                                     name="username"
                                     required
-                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
-                                    placeholder="e.g. john_doe"
+                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Username"
                                     value={formData.username}
                                     onChange={handleInputChange}
                                 />
                             </div>
                         </div>
 
-                        {/* Password */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                             <div className="relative">
@@ -111,7 +132,7 @@ const AuthPage: React.FC = () => {
                                     type="password"
                                     name="password"
                                     required
-                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="••••••••"
                                     value={formData.password}
                                     onChange={handleInputChange}
@@ -119,7 +140,6 @@ const AuthPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Confirm Password (Only for Register) */}
                         {!isLogin && (
                             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
@@ -131,7 +151,7 @@ const AuthPage: React.FC = () => {
                                         type="password"
                                         name="confirmPassword"
                                         required
-                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                         placeholder="••••••••"
                                         value={formData.confirmPassword}
                                         onChange={handleInputChange}
@@ -140,7 +160,6 @@ const AuthPage: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Submit Button */}
                         <button
                             type="submit"
                             disabled={loading}
@@ -149,10 +168,7 @@ const AuthPage: React.FC = () => {
                             }`}
                         >
                             {loading ? (
-                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
+                                <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
                             ) : (
                                 <>
                                     {isLogin ? <LogIn size={20} className="mr-2" /> : <UserPlus size={20} className="mr-2" />}
@@ -162,7 +178,6 @@ const AuthPage: React.FC = () => {
                         </button>
                     </form>
 
-                    {/* Toggle Link */}
                     <div className="mt-8 text-center border-t pt-6">
                         <button
                             onClick={() => setIsLogin(!isLogin)}
