@@ -1,8 +1,5 @@
 <img width="1919" height="940" alt="Screenshot 2026-02-05 170513" src="https://github.com/user-attachments/assets/7705e686-b11d-4a54-962e-9b80fe6a3f1b" />
-<img width="1919" height="940" alt="Screenshot 2026-02-05 170513" src="https://github.com/user-attachments/assets/7705e686-b11d-4a54-962e-9b80fe6a3f1b" />
 <img width="1917" height="1029" alt="Screenshot 2026-02-05 105937" src="https://github.com/user-attachments/assets/6f27d76d-86d1-4e47-8c64-85bd517b45ed" />
-<img width="1917" height="1029" alt="Screenshot 2026-02-05 105937" src="https://github.com/user-attachments/assets/6f27d76d-86d1-4e47-8c64-85bd517b45ed" />
-<img width="1909" height="975" alt="Screenshot 2026-02-05 105927" src="https://github.com/user-attachments/assets/faddf869-beca-47d8-ab7c-cc0177684fa0" />
 <img width="1909" height="975" alt="Screenshot 2026-02-05 105927" src="https://github.com/user-attachments/assets/faddf869-beca-47d8-ab7c-cc0177684fa0" />
 # Tetherfi Real-Time Chat Application
 
